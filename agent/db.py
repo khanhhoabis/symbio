@@ -124,7 +124,7 @@ class VectorDBManager:
         dim = self.embedding_dimension
         
         # 1. Notes Table Schema
-        if "notes" not in db.table_names():
+        if "notes" not in db.list_tables().tables:
             notes_schema = pa.schema([
                 pa.field("id", pa.string()),
                 pa.field("path", pa.string()),
@@ -137,7 +137,7 @@ class VectorDBManager:
             print("Created empty table: notes (with PyArrow schema)")
         
         # 2. Skills Table Schema
-        if "skills" not in db.table_names():
+        if "skills" not in db.list_tables().tables:
             skills_schema = pa.schema([
                 pa.field("id", pa.string()),
                 pa.field("name", pa.string()),
