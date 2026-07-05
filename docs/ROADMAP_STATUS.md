@@ -35,7 +35,7 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 | **Cơ sở dữ liệu Vector** | Kết nối LanceDB, tạo bảng chỉ mục notes & skills, viết hàm sinh embeddings | [agent/db.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/db.py) | ✅ Đã code & biên dịch |
 | **Bộ đọc Kỹ năng (Skills)** | Regex phân tích YAML frontmatter, đồng bộ hóa skills vào DB | [agent/skills.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/skills.py) | ✅ Đã code & biên dịch |
 | **Động cơ Agent (Hermes)** | Ráp nối context notes, instructions và gọi API LLM | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | ✅ Đã code & biên dịch |
-| **Chạy thử nghiệm & Debug** | Nhập API Key (Gemini hoặc Ollama), chạy thực tế CLI | N/A | ⏳ **Kế hoạch Tiếp theo (Cần bạn cấp API Key)** |
+| **Chạy thử nghiệm & Debug** | Nhập API Key (Gemini hoặc Ollama), chạy thực tế CLI | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | ✅ Hoàn thành |
 | **Script Tự động hóa quét Vault**| Lập lịch định kỳ tự động quét file Markdown mới để nạp vào DB | `agent/watcher.py` | 📥 Chưa bắt đầu |
 
 ---
