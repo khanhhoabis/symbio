@@ -57,13 +57,14 @@ graph TD
 
 ## 🗺️ Lộ trình Phát triển (MVP Focus)
 
-Hành trình xây dựng Symbio được chia thành 3 giai đoạn cốt lõi để đảm bảo khả năng mở rộng với chỉ **một nhân sự phát triển (Solopreneur)**:
+Hành trình xây dựng Symbio được chia thành 4 giai đoạn cốt lõi để đảm bảo khả năng mở rộng với chỉ **một nhân sự phát triển (Solopreneur)**:
 
 | Giai đoạn | Tên Giai đoạn | Mục tiêu chính | Chi tiết triển khai |
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Hạt nhân (Core CLI)** | Kết nối Markdown Vault với Hermes Agent | Viết script Python/Rust, thiết lập Vector DB cục bộ, cấu hình Prompting & Skill Generation. |
 | **Phase 2** | **Vỏ bọc (Desktop App)** | Ra mắt ứng dụng Desktop đầu tiên | Dựng UI bằng Tauri + React, tích hợp Editor cơ bản và Sidebar AI hỗ trợ. |
 | **Phase 3** | **Mở rộng (Mobile & Sync)** | Hoàn thiện hệ sinh thái đa nền tảng | Phát triển App React Native, tối ưu hóa đồng bộ qua iCloud/Google Drive, mở rộng cộng đồng. |
+| **Phase 4** | **Cổng kết nối MCP (Cổng phụ)**| Tích hợp vào Claude/Antigravity | Xây dựng MCP Server wrapper, hỗ trợ người dùng Pro sử dụng trực tiếp qua Claude Desktop/Cursor. |
 
 ---
 

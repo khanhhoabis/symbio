@@ -62,6 +62,17 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 
 ---
 
+### 🔌 Giai Đoạn 4: Tích Hợp Giao Thức MCP (Cổng Kết Nối Phụ) (Chưa bắt đầu)
+Xây dựng lớp bọc MCP (MCP Wrapper) để tích hợp vào các công cụ trò chuyện AI sẵn có.
+
+| Công việc | Chi tiết triển khai | Trạng thái |
+| :--- | :--- | :--- |
+| **Xây dựng MCP Server** | Tạo module `mcp_server.py` kết nối CLI lõi với SDK MCP chính thức | 📥 Chưa bắt đầu |
+| **Khai báo Tools** | Đăng ký các công cụ đọc/ghi note và gọi skill với MCP Client | 📥 Chưa bắt đầu |
+| **Tích hợp Claude/Antigravity** | Cấu hình tệp `mcp_config.json` để chạy thử nghiệm thực tế | 📥 Chưa bắt đầu |
+
+---
+
 ## 📋 Trình Tự Thực Hiện Tiếp Theo (Next Action Items)
 
 Để tiếp tục đẩy dự án đi đúng hướng, đây là trình tự việc chúng ta cần làm:
