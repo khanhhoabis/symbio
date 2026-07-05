@@ -17,3 +17,10 @@ vault/.system/symbio_db/
 .DS_Store
 .vscode/
 .idea/
+
+# Frontend Node packages & Build outputs
+node_modules/
+dist/
+
+# Rust compiler outputs
+src-tauri/target/
