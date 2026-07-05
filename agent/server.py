@@ -12,7 +12,7 @@ sys.path.insert(0, str(AGENT_DIR))
 
 import config
 from db import VectorDBManager
-from hermes import HermesAgent
+from hermes import HermesCore
 
 
 class SymbioHTTPHandler(BaseHTTPRequestHandler):
@@ -200,10 +200,9 @@ def main():
     # Ensure config folders are active
     config.ensure_directories()
 
-    # Initialize managers
-    db_manager = VectorDBManager()
-    db_manager.initialize_tables()
-    agent = HermesAgent(db_manager)
+    # Initialize managers via Hermes core
+    agent = HermesCore()
+    db_manager = agent.db_manager
 
     # Start HTTP server
     server_address = ("127.0.0.1", args.port)  # Strictly bind to localhost for security
