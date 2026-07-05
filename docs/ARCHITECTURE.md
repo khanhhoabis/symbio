@@ -1,0 +1,61 @@
+# 🏗️ Tài Liệu Kiến Trúc Dự Án Symbio (ARCHITECTURE.md)
+
+Tài liệu này mô tả chi tiết kiến trúc kỹ thuật của hệ điều hành tri thức cá nhân Symbio. Đây là nguồn tri thức nền tảng dùng cho cả nhà phát triển (người dùng) và AI Agent để luôn giữ sự đồng bộ và tránh sai lệch thiết kế (context drift).
+
+---
+
+## 📂 Tổng Quan Cấu Trúc Mã Nguồn
+
+Hạt nhân AI của Symbio nằm trong thư mục `agent/` và được chia thành các module chức năng độc lập:
+
+| Tên Module | Tệp tin | Chức năng chính |
+| :--- | :--- | :--- |
+| **Hệ thống Cấu hình** | [agent/config.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/config.py) | Nạp biến môi trường từ `.env` cục bộ (đường dẫn tuyệt đối), tự động tạo các thư mục lưu trữ hệ thống ngầm trong Vault. |
+| **Cơ sở dữ liệu Vector**| [agent/db.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/db.py) | Thiết lập kết nối serverless LanceDB, sinh vector embeddings thông qua `google-genai` hoặc Ollama, định nghĩa schemas và thực thi tìm kiếm ngữ nghĩa. |
+| **Trình quản lý Kỹ năng**| [agent/skills.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/skills.py) | Quét các tệp Markdown trong Vault hệ thống để phân tích YAML frontmatter cấu hình kỹ năng và nạp vào Vector DB. |
+| **Hạt nhân Trình chạy** | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | Điều phối luồng làm việc. Kết nối truy vấn DB tìm ghi chú và kỹ năng, lắp ráp prompt có cấu trúc suy nghĩ `<thought>` gửi đến LLM. |
+
+---
+
+## ⚙️ Cấu Hình Biến Môi Trường (`agent/.env`)
+
+Các biến cấu hình bắt buộc:
+* `VAULT_PATH`: Đường dẫn thư mục ghi chú cục bộ (Mặc định: `../vault`).
+* `LLM_PROVIDER`: Nhà cung cấp LLM, hỗ trợ `gemini` hoặc `ollama`.
+* `LLM_MODEL`: Tên mô hình chạy (Mặc định: `gemini-2.5-flash` cho Gemini).
+* `GEMINI_API_KEY`: API Key lấy từ Google AI Studio (Bắt buộc nếu chọn provider là `gemini`).
+* `OLLAMA_HOST`: Địa chỉ local endpoint (Mặc định: `http://localhost:11434`).
+
+---
+
+## 🗄️ Cấu Trúc Cơ Sở Dữ Liệu Vector (LanceDB Schema)
+
+Cơ sở dữ liệu được lưu trữ serverless tại: `vault/.system/symbio_db`. 
+
+### 1. Bảng Ghi Chú (`notes`)
+Sử dụng để tìm kiếm ngữ nghĩa nội dung ghi chú Markdown của người dùng.
+* `id` (`string`): Khóa định danh duy nhất (thường là đường dẫn hoặc tên file).
+* `path` (`string`): Đường dẫn tương đối từ Vault đến tệp tin Markdown.
+* `content` (`string`): Nội dung văn bản thô của ghi chú.
+* `tags` (`string`): Các thẻ phân loại được lưu cách nhau bởi dấu phẩy.
+* `last_modified` (`float`): Thời gian cập nhật tệp tin cuối cùng (timestamp).
+* `vector` (`list[float32]`): Vector nhúng ngữ nghĩa của ghi chú.
+  - Kích thước mặc định cho Gemini: **3072 chiều** (Mô hình: `gemini-embedding-2`).
+  - Kích thước mặc định cho Ollama: **768 chiều** (Mô hình: `nomic-embed-text`).
+
+### 2. Bảng Kỹ Năng Agent (`skills`)
+Sử dụng để khớp ngữ cảnh các hành động Agent có thể thực hiện.
+* `id` (`string`): Khóa định danh của kỹ năng.
+* `name` (`string`): Tên kỹ năng thân thiện.
+* `description` (`string`): Mô tả ngắn gọn nhiệm vụ kỹ năng hỗ trợ.
+* `trigger` (`string`): Điều kiện kích hoạt tự nhiên.
+* `file_path` (`string`): Đường dẫn tệp tin Markdown kỹ năng.
+* `vector` (`list[float32]`): Vector nhúng của chuỗi thông tin `[Name + Description + Trigger]`.
+  - Kích thước khớp hoàn toàn với cấu hình kích thước của Bảng `notes`.
+
+---
+
+## 🔄 Quy Tắc Đường Dẫn Cục Bộ (Local-First Portability)
+Để đảm bảo người dùng có thể di chuyển cả thư mục ghi chú sang máy khác hoặc đồng bộ lên iCloud/Google Drive mà AI Agent vẫn không bị lỗi cấu hình:
+1. Tất cả dữ liệu hệ thống ngầm, DB và Skills đều được lưu trữ **bên trong** thư mục `vault/.system/`.
+2. Mọi đường dẫn trong mã nguồn Python khi đọc file cấu hình tương đối đều phải được giải quyết (resolve) thông qua vị trí tuyệt đối của thư mục `agent/` làm mốc tham chiếu thay vì dùng Cwd.
