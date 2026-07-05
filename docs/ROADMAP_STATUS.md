@@ -57,7 +57,7 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 
 | Công việc | Chi tiết triển khai | Trạng thái |
 | :--- | :--- | :--- |
-| **Khởi tạo app Expo** | Tạo dự án React Native Expo | 📥 Chưa bắt đầu |
+| **Khởi tạo app Expo** | Tạo dự án React Native Expo | [mobile/](file:///Users/hoanhk5/Documents/khbis_github/symbio/mobile/) | ✅ Hoàn thành |
 | **Tương tác tệp tin** | Tích hợp thư viện đọc/ghi file từ thư mục iCloud / Google Drive | 📥 Chưa bắt đầu |
 | **Tính năng Quick Capture** | Soạn ghi chú nhanh gọn, ghi âm chuyển giọng nói thành văn bản | 📥 Chưa bắt đầu |
 
