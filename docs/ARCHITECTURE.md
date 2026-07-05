@@ -79,3 +79,40 @@ Module [agent/watcher.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/ag
 3. **Loại trừ An toàn:**
    - Watcher bỏ qua tất cả tệp tin bắt đầu bằng dấu chấm `.` hoặc không thuộc định dạng `.md`.
    - **Đặc biệt loại trừ thư mục `.system/`** để tránh vòng lặp sự kiện vô hạn (ghi vào DB kích hoạt watcher quay lại ghi DB).
+
+---
+
+## 💻 Kiến Trúc Giao Diện Desktop (Tauri v2 + React)
+Symbio Desktop đóng gói hạt nhân Python thành một ứng dụng đồ họa cục bộ mượt mà:
+
+```text
+  +-------------------------------------------------------------+
+  |                   Symbio Desktop Shell                      |
+  |                                                             |
+  |  +--------------------+             +--------------------+  |
+  |  |  React Frontend    |             |    Rust Backend    |  |
+  |  |  (Vite + TS)       |             |    (Tauri Core)    |  |
+  |  +--------------------+             +--------------------+  |
+  |         |                                    |              |
+  |         | 1. Gọi Tauri Command               |              |
+  |         v                                    v              |
+  |    get_server_port() -------> Lấy Cổng Mạng Cục Bộ          |
+  |         |                                    |              |
+  |         | 3. HTTP REST Requests              | 2. Spawn     |
+  |         +-------------------+                | Subprocess   |
+  |                             |                |              |
+  |                             v                v              |
+  |                     +---------------------------------+     |
+  |                     |  Python Server (server.py)      |     |
+  |                     |  (Cổng mạng động, CORS active)  |     |
+  |                     +---------------------------------+     |
+  +-------------------------------------------------------------+
+```
+
+### 1. Đồng Hành Tiến Trình (Subprocess Symbiosis)
+- **Khởi chạy động (Dynamic Port):** Khi khởi động, Tauri Rust (`src-tauri/src/lib.rs`) quét tìm một cổng TCP cục bộ trống ngẫu nhiên (sử dụng `TcpListener` bind cổng `0`), sau đó khởi tạo tiến trình con chạy tệp Python REST API `agent/server.py` bằng tham số `--port <port>`.
+- **Dọn dẹp tài nguyên:** Khi ứng dụng bị đóng (sự kiện `RunEvent::Exit`), Rust backend sẽ thu hồi tài nguyên và gọi hàm `.kill()` trên handle tiến trình con để dập tắt Python server chạy ngầm, bảo vệ RAM của hệ thống và giải phóng cổng mạng.
+
+### 2. Cầu Nối API Giao Diện (React UI Connection)
+- React Frontend giao tiếp với Tauri thông qua thư viện API của Tauri để chạy lệnh `get_server_port`.
+- Giao diện 3 cột thực thi gọi các HTTP JSON endpoint cục bộ của Python server để nạp tài liệu, soạn thảo ghi chú, tự động lưu (auto-save với debounce 1.5 giây) và nói chuyện với Hermes Agent.
