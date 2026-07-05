@@ -33,7 +33,11 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"synced" | "saving" | "unsaved">("synced");
   const [expandedThoughtIndex, setExpandedThoughtIndex] = useState<number | null>(null);
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [folderExpanded, setFolderExpanded] = useState<Record<string, boolean>>({});
+  const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [showFormatPanel, setShowFormatPanel] = useState(false);
+  const [formatPrompt, setFormatPrompt] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -78,7 +82,87 @@ export default function App() {
       console.error("Failed to load file list:", err);
     }
   }
+  // Utility: group files by folder
+  function groupFilesByFolder(files: NoteFile[]): Array<[string, NoteFile[]]> {
+    const groups: Record<string, NoteFile[]> = {};
+    files.forEach((f) => {
+      const parts = f.path.split("/");
+      const folder = parts.length > 1 ? parts[0] : "root";
+      if (!groups[folder]) groups[folder] = [];
+      groups[folder].push(f);
+    });
+    return Object.entries(groups);
+  }
 
+  const groupedFiles = groupFilesByFolder(files);
+
+  function toggleFolder(folder: string) {
+    setFolderExpanded((prev) => ({
+      ...prev,
+      [folder]: !prev[folder],
+    }));
+  }
+
+  async function handleRename(oldPath: string, newName: string) {
+    if (!newName.trim()) {
+      setRenamingPath(null);
+      return;
+    }
+    const newPath = (() => {
+      const parts = oldPath.split("/");
+      const filename = newName.endsWith(".md") ? newName : `${newName}.md`;
+      if (parts.length > 1) {
+        return `${parts.slice(0, -1).join("/")}/${filename}`;
+      }
+      return filename;
+    })();
+    if (port === null) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/api/rename`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ old_path: oldPath, new_path: newPath }),
+      });
+      if (res.ok) {
+        await loadFileList();
+        if (activeFile?.path === oldPath) {
+          setActiveFile({ ...activeFile, path: newPath, name: filename });
+        }
+      } else {
+        console.error("Rename failed");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRenamingPath(null);
+    }
+  }
+
+  function openFormatPanel() {
+    setShowFormatPanel(true);
+  }
+
+  async function applyFormat() {
+    if (!activeFile) return;
+    if (port === null) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/api/format`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: activeFile.content, prompt: formatPrompt }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const formatted = data.formatted_content || data.content || activeFile.content;
+        setActiveFile((prev) => (prev ? { ...prev, content: formatted } : prev));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setShowFormatPanel(false);
+      setFormatPrompt("");
+    }
+  }
   // 3. Load File Content
   async function selectFile(file: NoteFile) {
     if (port === null) return;
@@ -203,66 +287,126 @@ export default function App() {
       setIsGenerating(false);
     }
   }
-
+  const wordCount = activeFile ? activeFile.content.trim().split(/\s+/).filter(Boolean).length : 0;
   return (
     <div className="symbio-container">
       {/* COLUMN 1: FILE NAVIGATOR */}
       <aside className="sidebar-nav">
-        <div className="sidebar-header">
-          <h2>🧠 SYMBIO</h2>
-          <button className="new-note-btn" onClick={createNewNote}>
-            + Note mới
-          </button>
-        </div>
-        <div className="file-list">
-          {files.map((file) => (
-            <div
-              key={file.path}
-              className={`file-item ${activeFile?.path === file.path ? "active" : ""}`}
-              onClick={() => selectFile(file)}
-            >
-              <span className="file-icon">📄</span>
-              <span className="file-name">{file.name}</span>
-            </div>
-          ))}
-          {files.length === 0 && (
-            <div className="empty-files-placeholder">Chưa có ghi chú nào. Hãy tạo note mới!</div>
-          )}
-        </div>
-      </aside>
+          <div className="sidebar-header">
+            <h2>🧠 SYMBIO</h2>
+            <button className="new-note-btn" onClick={createNewNote}>
+              + Note mới
+            </button>
+          </div>
+          {/* Search Bar */}
+          <input
+            type="text"
+            className="file-search"
+            placeholder="🔍 Tìm ghi chú..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="file-list">
+            {groupedFiles.map(([folder, folderFiles]) => (
+              <div key={folder} className="folder-group">
+                <div className="folder-title" onClick={() => toggleFolder(folder)}>
+                  {folderExpanded[folder] ? "▼" : "▶"} {folder}
+                </div>
+                {folderExpanded[folder] &&
+                  folderFiles
+                    .filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((file) => (
+                      <div
+                        key={file.path}
+                        className={`file-item ${activeFile?.path === file.path ? "active" : ""}`}
+                        onClick={() => selectFile(file)}
+                      >
+                        <span className="file-icon">📄</span>
+                        {/* Inline rename */}
+                        {renamingPath === file.path ? (
+                          <input
+                            className="rename-input"
+                            defaultValue={file.name.replace(/\.md$/i, "")}
+                            onBlur={(e) => handleRename(file.path, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleRename(file.path, e.currentTarget.value);
+                              } else if (e.key === "Escape") {
+                                setRenamingPath(null);
+                              }
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span
+                            className="file-name"
+                            onDoubleClick={() => setRenamingPath(file.path)}
+                          >
+                            {file.name}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+              </div>
+            ))}
+            {files.length === 0 && (
+              <div className="empty-files-placeholder">Chưa có ghi chú nào. Hãy tạo note mới!</div>
+            )}
+          </div>
+        </aside>
 
       {/* COLUMN 2: MARKDOWN EDITOR */}
       <main className="editor-area">
-        {activeFile ? (
-          <div className="editor-container">
-            <header className="editor-header">
-              <div className="editor-title">
-                <span className="editor-file-icon">📂</span>
-                <span className="editor-file-path">{activeFile.path}</span>
-              </div>
-              <div className="editor-sync-indicator">
-                {saveStatus === "synced" && <span className="status-synced">● Đã lưu</span>}
-                {saveStatus === "saving" && <span className="status-saving">◌ Đang lưu...</span>}
-                {saveStatus === "unsaved" && <span className="status-unsaved">○ Chưa lưu</span>}
-              </div>
-            </header>
-            <textarea
-              className="markdown-textarea"
-              value={activeFile.content}
-              onChange={(e) => handleEditorChange(e.target.value)}
-              placeholder="Bắt đầu ghi lại tri thức của bạn..."
-            />
-          </div>
-        ) : (
-          <div className="editor-placeholder">
-            <div className="placeholder-content">
-              <span className="large-logo">🧠</span>
-              <h3>Chào mừng bạn đến với Symbio</h3>
-              <p>Chọn một ghi chú ở cột bên trái hoặc bấm nút tạo ghi chú mới để bắt đầu.</p>
+          {activeFile ? (
+            <div className="editor-container">
+              <header className="editor-header">
+                <div className="editor-title">
+                  <span className="editor-file-icon">📂</span>
+                  <span className="editor-file-path">{activeFile.path}</span>
+                </div>
+                <div className="editor-sync-indicator">
+                  {saveStatus === "synced" && <span className="status-synced">● Đã lưu</span>}
+                  {saveStatus === "saving" && <span className="status-saving">◌ Đang lưu...</span>}
+                  {saveStatus === "unsaved" && <span className="status-unsaved">○ Chưa lưu</span>}
+                </div>
+                {/* AI Format Button */}
+                <button className="format-btn" onClick={openFormatPanel}>✨ Format</button>
+              </header>
+              <textarea
+                className="markdown-textarea"
+                value={activeFile.content}
+                onChange={(e) => handleEditorChange(e.target.value)}
+                placeholder="Bắt đầu ghi lại tri thức của bạn..."
+              />
             </div>
-          </div>
-        )}
-      </main>
+          ) : (
+            <div className="editor-placeholder">
+              <div className="placeholder-content">
+                <span className="large-logo">🧠</span>
+                <h3>Chào mừng bạn đến với Symbio</h3>
+                <p>Chọn một ghi chú ở cột bên trái hoặc bấm nút tạo ghi chú mới để bắt đầu.</p>
+              </div>
+            </div>
+          )}
+          {/* Format Panel */}
+          {showFormatPanel && (
+            <div className="format-panel">
+              <textarea
+                className="format-prompt"
+                placeholder="Nhập prompt định dạng (VD: 'Viết lại ngắn gọn')"
+                value={formatPrompt}
+                onChange={(e) => setFormatPrompt(e.target.value)}
+              />
+              <div className="quick-prompts">
+                <button onClick={() => setFormatPrompt('Cấu trúc lại với heading')}>📐 Cấu trúc</button>
+                <button onClick={() => setFormatPrompt('Súc tích hơn')}>✏️ Súc tích</button>
+                <button onClick={() => setFormatPrompt('Mở rộng nội dung')}>🌟 Mở rộng</button>
+              </div>
+              <button className="apply-format" onClick={applyFormat}>Áp dụng</button>
+              <button className="close-format" onClick={() => setShowFormatPanel(false)}>✖ Đóng</button>
+            </div>
+          )}
+        </main>
 
       {/* COLUMN 3: AI SIDEBAR COMPANION */}
       <aside className="sidebar-chat">
