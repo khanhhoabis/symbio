@@ -32,8 +32,13 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![get_server_port])
         .setup(move |app| {
-            let python_path = "agent/.venv/bin/python3";
-            let script_path = "agent/server.py";
+            let mut cwd = std::env::current_dir().unwrap_or_default();
+            if cwd.ends_with("src-tauri") {
+                cwd.pop();
+            }
+
+            let python_path = cwd.join("agent").join(".venv").join("bin").join("python3");
+            let script_path = cwd.join("agent").join("server.py");
 
             // Spawn the python REST server as a background sidecar
             let child = Command::new(python_path)
