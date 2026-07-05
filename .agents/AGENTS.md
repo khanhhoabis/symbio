@@ -24,3 +24,15 @@ Mọi Agent AI (bao gồm cả coding assistants) hoạt động trong thư mụ
 * Các thông điệp commit phải tuân thủ chuẩn Conventional Commits (ví dụ: `feat(agent): add semantic search core`, `fix(ui): correct editor line height`).
 * Luôn liên kết mã số Issue trong nội dung commit hoặc PR (ví dụ: `Closes #12`).
 * Trong quá trình làm việc, hãy tạo các commit nhỏ và liên tục thay vì gom tất cả thay đổi vào một commit duy nhất. Điều này giúp dễ dàng `git revert` khi xảy ra lỗi.
+
+---
+
+## 🤖 4. Quy Tắc Tác Vụ Tự Động (Automated Agent Operations)
+
+Để duy trì tính đồng bộ và chất lượng tài liệu, một số tác vụ được tự động hóa bởi các AI Agent:
+
+### 4.1. Quy Trình Đồng Bộ Tài Liệu (Document Sync Policy)
+*   **Git Hook Cục bộ (`agent/sync_docs.py`):** Chỉ hoạt động tự động nếu sử dụng LLM cục bộ miễn phí (`ollama`). Nếu cấu hình là `gemini` (có phí), hook sẽ tự động bỏ qua để tránh phát sinh chi phí API cho người dùng.
+*   **Trách nhiệm của IDE Agent:** Trong quá trình lập trình (sử dụng Antigravity IDE miễn phí), trước khi hoàn thành một nhánh tính năng và mở Pull Request, IDE Agent bắt buộc phải phân tích toàn bộ thay đổi và cập nhật thủ công các tệp `docs/ARCHITECTURE.md` và `.agents/AGENTS.md` để đồng bộ ngữ cảnh.
+*   **Cam kết Commit:** Khi tài liệu được cập nhật tự động (bởi hook Ollama hoặc bởi Agent), thông điệp commit phải bắt đầu bằng định dạng `docs(auto):`.
+*   **Cơ chế chống lặp:** Script được cấu hình để tự động thoát nếu commit cuối cùng là một commit `docs(auto):` nhằm ngăn chặn vòng lặp vô hạn.
