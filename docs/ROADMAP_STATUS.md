@@ -37,7 +37,7 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 | **Động cơ Agent (Hermes)** | Ráp nối context notes, instructions và gọi API LLM | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | ✅ Đã code & biên dịch |
 | **Chạy thử nghiệm & Debug** | Nhập API Key (Gemini hoặc Ollama), chạy thực tế CLI | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | ✅ Hoàn thành |
 | **Khung kiểm thử (Test Harness)** | Thiết lập pytest và sandbox test suite để kiểm nghiệm DB, config, skills, và hooks | [agent/tests/](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/tests/) | ✅ Hoàn thành |
-| **Script Tự động hóa quét Vault**| Lập lịch định kỳ tự động quét file Markdown mới để nạp vào DB | `agent/watcher.py` | 📥 Chưa bắt đầu |
+| **Script Tự động hóa quét Vault** | Lập lịch định kỳ tự động quét file Markdown mới để nạp vào DB | [agent/watcher.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/watcher.py) | ✅ Hoàn thành |
 
 ---
 
@@ -46,10 +46,10 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 
 | Công việc | Chi tiết triển khai | Trạng thái |
 | :--- | :--- | :--- |
-| **Khởi tạo dự án Tauri** | Thiết lập Rust backend và React frontend | 📥 Chưa bắt đầu |
-| **Xây dựng WYSIWYG Editor** | Trình soạn thảo Markdown tối giản, mượt mà | 📥 Chưa bắt đầu |
-| **AI Sidebar Companion** | Sidebar trò chuyện với Hermes Agent, hiển thị ý nghĩ `<thought>` | 📥 Chưa bắt đầu |
-| **Tương tác File local qua Tauri** | Gọi code Python hạt nhân hoặc Rust sidecar để đọc/ghi file trực tiếp | 📥 Chưa bắt đầu |
+| **Khởi tạo dự án Tauri** | Thiết lập Rust backend và React frontend | ✅ Hoàn thành |
+| **Xây dựng WYSIWYG Editor** | Trình soạn thảo Markdown tối giản, mượt mà | ✅ Hoàn thành |
+| **AI Sidebar Companion** | Sidebar trò chuyện với Hermes Agent, hiển thị ý nghĩ `<thought>` | ✅ Hoàn thành |
+| **Tương tác File local qua Tauri** | Gọi code Python hạt nhân hoặc Rust sidecar để đọc/ghi file trực tiếp | ✅ Hoàn thành |
 
 ---
 
@@ -57,7 +57,7 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 
 | Công việc | Chi tiết triển khai | Trạng thái |
 | :--- | :--- | :--- |
-| **Khởi tạo app Expo** | Tạo dự án React Native Expo | 📥 Chưa bắt đầu |
+| **Khởi tạo app Expo** | Tạo dự án React Native Expo | [mobile/](file:///Users/hoanhk5/Documents/khbis_github/symbio/mobile/) | ✅ Hoàn thành |
 | **Tương tác tệp tin** | Tích hợp thư viện đọc/ghi file từ thư mục iCloud / Google Drive | 📥 Chưa bắt đầu |
 | **Tính năng Quick Capture** | Soạn ghi chú nhanh gọn, ghi âm chuyển giọng nói thành văn bản | 📥 Chưa bắt đầu |
 
