@@ -2,8 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from absolute path of .env file
+dotenv_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=dotenv_path)
 
 # Base directories
 AGENT_DIR = Path(__file__).resolve().parent
@@ -11,7 +12,12 @@ DEFAULT_VAULT_PATH = AGENT_DIR.parent / "vault"
 
 # Vault Configuration
 VAULT_PATH_STR = os.getenv("VAULT_PATH", str(DEFAULT_VAULT_PATH))
-VAULT_PATH = Path(VAULT_PATH_STR).resolve()
+# Ensure relative paths in .env are resolved relative to the AGENT_DIR rather than the CWD
+vault_path_obj = Path(VAULT_PATH_STR)
+if not vault_path_obj.is_absolute():
+    VAULT_PATH = (AGENT_DIR / vault_path_obj).resolve()
+else:
+    VAULT_PATH = vault_path_obj.resolve()
 
 # System Paths (stored inside the vault to ensure local-first portability)
 SYSTEM_DIR = VAULT_PATH / ".system"

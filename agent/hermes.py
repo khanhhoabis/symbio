@@ -6,7 +6,7 @@ from db import VectorDBManager
 from skills import SkillManager
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -17,7 +17,12 @@ class HermesCore:
         config.ensure_directories()
         self.db_manager = VectorDBManager()
         self.skill_manager = SkillManager()
+        self.client = None
         
+        # Initialize Gemini client if configured
+        if config.LLM_PROVIDER == "gemini" and config.GEMINI_API_KEY and GEMINI_AVAILABLE:
+            self.client = genai.Client(api_key=config.GEMINI_API_KEY)
+            
         # Initialize tables in LanceDB if available
         try:
             self.db_manager.initialize_tables()
@@ -26,17 +31,16 @@ class HermesCore:
             print(f"Warning: Could not initialize database tables: {e}")
 
     def call_gemini(self, prompt: str) -> str:
-        """Call Google Gemini API via official SDK."""
-        if not GEMINI_AVAILABLE:
-            raise ImportError("google-generativeai is not installed. Please run: pip install google-generativeai")
+        """Call Google Gemini API via official google-genai Client SDK."""
+        if not GEMINI_AVAILABLE or not self.client:
+            raise ImportError("google-genai client is not installed or configured.")
         if not config.GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY is not set in environment.")
             
-        genai.configure(api_key=config.GEMINI_API_KEY)
-        model = genai.GenerativeModel(config.LLM_MODEL)
-        
-        # Optional: set system instruction if model supports it
-        response = model.generate_content(prompt)
+        response = self.client.models.generate_content(
+            model=config.LLM_MODEL,
+            contents=prompt,
+        )
         return response.text
 
     def call_ollama(self, prompt: str) -> str:
@@ -67,6 +71,8 @@ class HermesCore:
         try:
             context_notes = self.db_manager.query_notes(user_request, limit=3)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"  (Không thể truy vấn ghi chú: {e})")
 
         # 2. Query Vector DB for matching skills
@@ -74,6 +80,8 @@ class HermesCore:
         try:
             matching_skills = self.db_manager.find_matching_skill(user_request)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"  (Không thể tìm kiếm kỹ năng: {e})")
 
         # 3. Build structured prompt (Nous Research Style)

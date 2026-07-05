@@ -1,0 +1,19 @@
+# Python environment & cache
+agent/.venv/
+agent/venv/
+agent/__pycache__/
+*.pyc
+
+# Environment Secrets
+agent/.env
+
+# Local Databases & Vector DBs (Symbio Local-first DB)
+vault/.system/symbio_db/
+.lancedb/
+*.db
+*.sqlite
+
+# OS and IDE Settings
+.DS_Store
+.vscode/
+.idea/

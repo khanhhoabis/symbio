@@ -12,7 +12,7 @@ except ImportError:
     LANCE_AVAILABLE = False
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -25,6 +25,13 @@ except ImportError:
     OLLAMA_HTTP_AVAILABLE = False
 
 
+try:
+    import pyarrow as pa
+    PYARROW_AVAILABLE = True
+except ImportError:
+    PYARROW_AVAILABLE = False
+
+
 class VectorDBManager:
     def __init__(self):
         self.db_path = config.DATABASE_DIR
@@ -32,10 +39,19 @@ class VectorDBManager:
         self.api_key = config.GEMINI_API_KEY
         self.ollama_host = config.OLLAMA_HOST
         self._db = None
+        self.client = None
         
-        # Configure Gemini if key is present
+        # Configure Gemini client if key is present
         if self.provider == "gemini" and self.api_key and GEMINI_AVAILABLE:
-            genai.configure(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key)
+
+    @property
+    def embedding_dimension(self) -> int:
+        """Returns the vector dimension size based on active LLM provider."""
+        if self.provider == "gemini":
+            return 3072
+        # Default dimension for Ollama nomic-embed-text or fallback
+        return 768
 
     @property
     def db(self):
@@ -49,27 +65,26 @@ class VectorDBManager:
     def get_embedding(self, text: str) -> list:
         """Generates embedding vector for a given text based on current LLM provider."""
         if not text or not text.strip():
-            # Return dummy zero vector of size 768 (standard for Gemini text-embedding-004)
-            return [0.0] * 768
+            # Return dummy zero vector based on current provider dimension
+            return [0.0] * self.embedding_dimension
 
         if self.provider == "gemini":
             if not self.api_key:
                 raise ValueError("GEMINI_API_KEY is not configured in environment.")
-            if not GEMINI_AVAILABLE:
-                raise ImportError("google-generativeai is not installed. Please run: pip install google-generativeai")
+            if not GEMINI_AVAILABLE or not self.client:
+                raise ImportError("google-genai client is not initialized or installed.")
             
             try:
-                # Standard model for embeddings in Gemini
-                result = genai.embed_content(
-                    model="models/text-embedding-004",
-                    content=text,
-                    task_type="retrieval_document"
+                # Standard model for embeddings in Gemini using google-genai SDK
+                result = self.client.models.embed_content(
+                    model="gemini-embedding-2",
+                    contents=text,
                 )
-                return result["embedding"]
+                return result.embeddings[0].values
             except Exception as e:
                 print(f"Error generating Gemini embedding: {e}")
                 # Fallback dummy vector
-                return [0.0] * 768
+                return [0.0] * self.embedding_dimension
 
         elif self.provider == "ollama":
             # Call Ollama local embed API using raw python http to minimize dependencies
@@ -94,44 +109,45 @@ class VectorDBManager:
                 
         else:
             # Default fallback mock vector
-            return [0.0] * 768
+            return [0.0] * self.embedding_dimension
 
     def initialize_tables(self):
-        """Initializes tables for notes and skills if they do not exist."""
+        """Initializes tables for notes and skills if they do not exist using PyArrow schemas."""
         if not LANCE_AVAILABLE:
             print("Warning: LanceDB is not installed, skipping table initialization.")
             return
+        if not PYARROW_AVAILABLE:
+            print("Warning: PyArrow is not installed, skipping table initialization.")
+            return
 
         db = self.db
+        dim = self.embedding_dimension
         
-        # 1. Notes Table
+        # 1. Notes Table Schema
         if "notes" not in db.table_names():
-            # Create table with a schema template
-            dummy_vector = [0.0] * 768
-            schema_data = [{
-                "id": "init_dummy",
-                "path": "Inbox/hello.md",
-                "content": "Initial startup note",
-                "tags": "welcome,system",
-                "last_modified": time.time(),
-                "vector": dummy_vector
-            }]
-            db.create_table("notes", schema_data)
-            print("Created table: notes")
+            notes_schema = pa.schema([
+                pa.field("id", pa.string()),
+                pa.field("path", pa.string()),
+                pa.field("content", pa.string()),
+                pa.field("tags", pa.string()),
+                pa.field("last_modified", pa.float64()),
+                pa.field("vector", pa.list_(pa.float32(), dim))
+            ])
+            db.create_table("notes", schema=notes_schema)
+            print("Created empty table: notes (with PyArrow schema)")
         
-        # 2. Skills Table
+        # 2. Skills Table Schema
         if "skills" not in db.table_names():
-            dummy_vector = [0.0] * 768
-            schema_data = [{
-                "id": "init_dummy",
-                "name": "Dummy Skill",
-                "description": "Initial skill placeholder",
-                "trigger": "never",
-                "file_path": ".system/skills/README.md",
-                "vector": dummy_vector
-            }]
-            db.create_table("skills", schema_data)
-            print("Created table: skills")
+            skills_schema = pa.schema([
+                pa.field("id", pa.string()),
+                pa.field("name", pa.string()),
+                pa.field("description", pa.string()),
+                pa.field("trigger", pa.string()),
+                pa.field("file_path", pa.string()),
+                pa.field("vector", pa.list_(pa.float32(), dim))
+            ])
+            db.create_table("skills", schema=skills_schema)
+            print("Created empty table: skills (with PyArrow schema)")
 
     def index_note(self, note_id: str, relative_path: str, content: str, tags: str):
         """Adds or updates a note in the database index."""
@@ -163,8 +179,11 @@ class VectorDBManager:
         if not LANCE_AVAILABLE:
             return []
             
-        vector = self.get_embedding(query_text)
         table = self.db.open_table("notes")
+        if table.count_rows() == 0:
+            return []
+            
+        vector = self.get_embedding(query_text)
         # Perform vector similarity search
         results = table.search(vector).limit(limit).to_list()
         
@@ -202,8 +221,11 @@ class VectorDBManager:
         if not LANCE_AVAILABLE:
             return []
             
-        vector = self.get_embedding(user_intent)
         table = self.db.open_table("skills")
+        if table.count_rows() == 0:
+            return []
+            
+        vector = self.get_embedding(user_intent)
         results = table.search(vector).limit(2).to_list()
         
         return [r for r in results if r["id"] != "init_dummy"]
