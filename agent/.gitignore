@@ -1,0 +1,18 @@
+# Virtual Environment
+venv/
+ENV/
+.env
+
+# Python compilation and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local Databases & Vector DBs
+.lancedb/
+*.db
+*.sqlite
+
+# IDE settings
+.vscode/
+.idea/
