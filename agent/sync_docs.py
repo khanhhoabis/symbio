@@ -51,8 +51,9 @@ def main():
     provider = os.getenv("LLM_PROVIDER", "gemini").lower()
     model_name = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
-    if provider != "gemini" or not api_key or not GEMINI_AVAILABLE:
-        print("[SyncDocs] Gemini API is not configured or google-genai is not installed. Skipping auto-sync.")
+    # Restrict post-commit sync to only run if using free Ollama, preventing paid Gemini API costs
+    if provider != "ollama":
+        print("[SyncDocs] Post-commit auto-sync is skipped to prevent paid Gemini API charges. The IDE Agent will maintain documentation.")
         sys.exit(0)
 
     # 2. Retrieve Commit Diff

@@ -31,8 +31,8 @@ Mọi Agent AI (bao gồm cả coding assistants) hoạt động trong thư mụ
 
 Để duy trì tính đồng bộ và chất lượng tài liệu, một số tác vụ được tự động hóa bởi các AI Agent:
 
-### 4.1. Document Sync Agent (`agent/sync_docs.py`)
-*   **Chức năng:** Tự động phân tích `git diff` của mỗi commit và cập nhật các tài liệu kiến trúc (`docs/ARCHITECTURE.md`) và quy tắc agent (`.agents/AGENTS.md`) nếu phát hiện thay đổi về kiến trúc, cấu hình, phụ thuộc, cấu trúc thư mục hoặc lược đồ cơ sở dữ liệu.
-*   **Cơ chế:** Hoạt động như một Git Hook (hoặc tương đương), sử dụng LLM để đánh giá và tạo nội dung cập nhật.
-*   **Cam kết Commit:** Khi tài liệu được cập nhật tự động, Agent sẽ tạo một commit mới với thông điệp theo định dạng `docs(auto): sync architecture and workspace rules`.
-*   **Cơ chế chống lặp:** Agent được cấu hình để tự động thoát nếu commit cuối cùng là một commit `docs(auto):` do chính nó tạo ra, nhằm ngăn chặn vòng lặp vô hạn.
+### 4.1. Quy Trình Đồng Bộ Tài Liệu (Document Sync Policy)
+*   **Git Hook Cục bộ (`agent/sync_docs.py`):** Chỉ hoạt động tự động nếu sử dụng LLM cục bộ miễn phí (`ollama`). Nếu cấu hình là `gemini` (có phí), hook sẽ tự động bỏ qua để tránh phát sinh chi phí API cho người dùng.
+*   **Trách nhiệm của IDE Agent:** Trong quá trình lập trình (sử dụng Antigravity IDE miễn phí), trước khi hoàn thành một nhánh tính năng và mở Pull Request, IDE Agent bắt buộc phải phân tích toàn bộ thay đổi và cập nhật thủ công các tệp `docs/ARCHITECTURE.md` và `.agents/AGENTS.md` để đồng bộ ngữ cảnh.
+*   **Cam kết Commit:** Khi tài liệu được cập nhật tự động (bởi hook Ollama hoặc bởi Agent), thông điệp commit phải bắt đầu bằng định dạng `docs(auto):`.
+*   **Cơ chế chống lặp:** Script được cấu hình để tự động thoát nếu commit cuối cùng là một commit `docs(auto):` nhằm ngăn chặn vòng lặp vô hạn.
