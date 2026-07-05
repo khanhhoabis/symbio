@@ -24,3 +24,15 @@ Mọi Agent AI (bao gồm cả coding assistants) hoạt động trong thư mụ
 * Các thông điệp commit phải tuân thủ chuẩn Conventional Commits (ví dụ: `feat(agent): add semantic search core`, `fix(ui): correct editor line height`).
 * Luôn liên kết mã số Issue trong nội dung commit hoặc PR (ví dụ: `Closes #12`).
 * Trong quá trình làm việc, hãy tạo các commit nhỏ và liên tục thay vì gom tất cả thay đổi vào một commit duy nhất. Điều này giúp dễ dàng `git revert` khi xảy ra lỗi.
+
+---
+
+## 🤖 4. Quy Tắc Tác Vụ Tự Động (Automated Agent Operations)
+
+Để duy trì tính đồng bộ và chất lượng tài liệu, một số tác vụ được tự động hóa bởi các AI Agent:
+
+### 4.1. Document Sync Agent (`agent/sync_docs.py`)
+*   **Chức năng:** Tự động phân tích `git diff` của mỗi commit và cập nhật các tài liệu kiến trúc (`docs/ARCHITECTURE.md`) và quy tắc agent (`.agents/AGENTS.md`) nếu phát hiện thay đổi về kiến trúc, cấu hình, phụ thuộc, cấu trúc thư mục hoặc lược đồ cơ sở dữ liệu.
+*   **Cơ chế:** Hoạt động như một Git Hook (hoặc tương đương), sử dụng LLM để đánh giá và tạo nội dung cập nhật.
+*   **Cam kết Commit:** Khi tài liệu được cập nhật tự động, Agent sẽ tạo một commit mới với thông điệp theo định dạng `docs(auto): sync architecture and workspace rules`.
+*   **Cơ chế chống lặp:** Agent được cấu hình để tự động thoát nếu commit cuối cùng là một commit `docs(auto):` do chính nó tạo ra, nhằm ngăn chặn vòng lặp vô hạn.
