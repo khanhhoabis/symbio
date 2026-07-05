@@ -46,10 +46,10 @@ Giai đoạn kết nối thư mục ghi chú Markdown của người dùng với
 
 | Công việc | Chi tiết triển khai | Trạng thái |
 | :--- | :--- | :--- |
-| **Khởi tạo dự án Tauri** | Thiết lập Rust backend và React frontend | 📥 Chưa bắt đầu |
-| **Xây dựng WYSIWYG Editor** | Trình soạn thảo Markdown tối giản, mượt mà | 📥 Chưa bắt đầu |
-| **AI Sidebar Companion** | Sidebar trò chuyện với Hermes Agent, hiển thị ý nghĩ `<thought>` | 📥 Chưa bắt đầu |
-| **Tương tác File local qua Tauri** | Gọi code Python hạt nhân hoặc Rust sidecar để đọc/ghi file trực tiếp | 📥 Chưa bắt đầu |
+| **Khởi tạo dự án Tauri** | Thiết lập Rust backend và React frontend | ✅ Hoàn thành |
+| **Xây dựng WYSIWYG Editor** | Trình soạn thảo Markdown tối giản, mượt mà | ✅ Hoàn thành |
+| **AI Sidebar Companion** | Sidebar trò chuyện với Hermes Agent, hiển thị ý nghĩ `<thought>` | ✅ Hoàn thành |
+| **Tương tác File local qua Tauri** | Gọi code Python hạt nhân hoặc Rust sidecar để đọc/ghi file trực tiếp | ✅ Hoàn thành |
 
 ---
 
