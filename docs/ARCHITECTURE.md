@@ -15,6 +15,7 @@ Hạt nhân AI của Symbio nằm trong thư mục `agent/` và được chia th
 | **Trình quản lý Kỹ năng**| [agent/skills.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/skills.py) | Quét các tệp Markdown trong Vault hệ thống để phân tích YAML frontmatter cấu hình kỹ năng và nạp vào Vector DB. |
 | **Hạt nhân Trình chạy** | [agent/hermes.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/hermes.py) | Điều phối luồng làm việc. Kết nối truy vấn DB tìm ghi chú và kỹ năng, lắp ráp prompt có cấu trúc suy nghĩ `<thought>` gửi đến LLM. |
 | **Trình đồng bộ Tài liệu** | [agent/sync_docs.py](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/sync_docs.py) | Đồng bộ hóa tự động tài liệu kiến trúc và quy tắc Agent (`ARCHITECTURE.md`, `AGENTS.md`) dựa trên `git diff` sử dụng LLM. Bao gồm cơ chế chống lặp vô hạn (auto-commit). |
+| **Khung kiểm thử** | [agent/tests/](file:///Users/hoanhk5/Documents/khbis_github/symbio/agent/tests/) | Chứa các bộ kiểm thử tự động sử dụng `pytest` để đảm bảo tính đúng đắn của DB, cấu hình, kỹ năng và các hooks. |
 
 ---
 
